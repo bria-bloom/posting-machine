@@ -1,0 +1,38 @@
+#!/bin/bash
+
+. ./config.sh
+
+usage () {
+  echo "Usage:"
+  echo "$ ./postcheck [postname]"
+  echo "[postname] is a required argument for the name of the folder under \$POST_HOME"
+  exit
+}
+
+checkfile () {
+  if [[ "$1" =~ $(echo ^\($(paste -sd'|' $POST_LOG)\)$) ]]; then
+    echo "$1 seems to have been posted before"
+  else
+    echo $1 >> $POST_LOG
+  fi
+}
+
+if [ $# -ne 1 ]
+then
+  usage
+elif [ ! -d "$POST_HOME/$1" -o ! "$(ls -A $POST_HOME/$1)" ]
+then
+  echo You want to make a post in $POST_HOME/$1, but that directory doesn\'t exist or is empty!
+  usage
+fi
+
+POST_PATH=$POST_HOME/$1
+HERE_PATH=`pwd`
+cd $POST_PATH
+FILES=./*
+for f in $FILES
+do
+  # Doing this every loop seems a little silly.
+  cd $HERE_PATH
+  checkfile $f
+done
